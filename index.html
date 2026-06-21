@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <title>Dvary Music App</title>
+</head>
+<body>
+    <h1>Music Player ya Dvary</h1>
+    <input type="text" id="search" placeholder="Tafuta msanii...">
+    <button onclick="searchMusic()">Tafuta</button>
+    <div id="results"></div>
+
+    <script type="module">
+        // 1. Import kutoka Firebase CDN
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        // 2. Configuration yako
+        const firebaseConfig = {
+            apiKey: "AIzaSyAHNhUyFC7PlZGijkmYUnEc1GlEYJGHI40",
+            authDomain: "manyama2006-50664.firebaseapp.com",
+            projectId: "manyama2006-50664",
+            storageBucket: "manyama2006-50664.firebasestorage.app",
+            messagingSenderId: "749612577601",
+            appId: "1:749612577601:web:53295431132ddff30027c0",
+            measurementId: "G-9E858GX9HB"
+        };
+
+        // 3. Initialize
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 4. Tafuta Nyimbo
+        window.searchMusic = async () => {
+            const query = document.getElementById('search').value;
+            const res = await fetch(`https://api.deezer.com/search?q=${query}`);
+            const data = await res.json();
+            
+            const list = document.getElementById('results');
+            list.innerHTML = "";
+            
+            data.data.forEach(song => {
+                const div = document.createElement('div');
+                div.style.margin = "10px";
+                div.innerHTML = `
+                    <img src="${song.album.cover_small}" style="vertical-align:middle">
+                    <strong>${song.title}</strong> - ${song.artist.name}
+                    <button onclick="saveSong('${song.title}', '${song.artist.name}')">Save</button>
+                `;
+                list.appendChild(div);
+            });
+        };
+
+        // 5. Save kwenye Firestore yako
+        window.saveSong = async (title, artist) => {
+            try {
+                await addDoc(collection(db, "favorites"), {
+                    title: title,
+                    artist: artist,
+                    savedAt: new Date()
+                });
+                alert("Wimbo: " + title + " umehifadhiwa kwenye database yako!");
+            } catch (e) {
+                alert("Error: " + e.message);
+            }
+        };
+    </script>
+</body>
+</html>
