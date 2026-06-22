@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dvary Music Hub</title>
+    <style>
+        * { transition: all 0.3s ease; }
+        body { font-family: sans-serif; background: #121212; color: white; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; margin: 0; }
+        .container { width: 100%; max-width: 650px; background: #181818; padding: 30px; border-radius: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        
+        /* Light Theme */
+        .light-theme { background: #f5f5f5; color: #121212; }
+        .light-theme .container { background: #ffffff; }
+        .light-theme .song-card { background: #e8e8e8; }
+        .light-theme .channel-banner { background: #128C7E; }
+        .light-theme .action-btn { color: white; }
+        
+        /* Channel Styles */
+        .channel-banner { background: #25D366; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+        .channel-banner a { color: #fff; font-weight: bold; text-decoration: none; font-size: 1.1em; }
+
+        input { width: 80%; padding: 15px; border-radius: 25px; border: none; margin-bottom: 15px; outline: none; font-size: 16px; }
+        .light-theme input { background: #e8e8e8; color: #121212; }
+        button.search-btn { padding: 15px 30px; border-radius: 25px; border: none; background: #1DB954; color: white; font-weight: bold; cursor: pointer; }
+        
+        .song-card { background: #282828; margin: 15px 0; padding: 15px; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; text-align: left; }
+        img { width: 60px; height: 60px; border-radius: 8px; margin-right: 15px; }
+        
+        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .action-btn { padding: 8px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 12px; font-weight: bold; text-decoration: none; color: white; }
+        .download-btn { background: #007bff; }
+        .save-btn { background: #444; }
+        .light-theme .save-btn { background: #666; }
+
+        /* Top Controls */
+        .top-controls { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .control-btn { padding: 8px 15px; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; font-size: 12px; background: #333; color: white; }
+        .light-theme .control-btn { background: #ddd; color: #121212; }
+        
+        /* Developer Info Section */
+        .developer-info { 
+            margin-top: 20px; 
+            padding: 15px; 
+            background: #2a2a2a; 
+            border-radius: 12px; 
+            border: 1px solid #3a3a3a;
+        }
+        .light-theme .developer-info { background: #f0f0f0; border-color: #ddd; }
+        .developer-info h3 { 
+            color: #25D366; 
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        .developer-info p { 
+            margin: 5px 0; 
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .developer-info .highlight { 
+            color: #25D366; 
+            font-weight: bold;
+        }
+        
+        /* Language toggle indicator */
+        .lang-indicator { font-size: 12px; opacity: 0.7; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="appContainer">
+    <!-- Top Controls: Theme & Language -->
+    <div class="top-controls">
+        <button class="control-btn" onclick="toggleTheme()">🌓 Change Theme</button>
+        <button class="control-btn" onclick="toggleLanguage()">🌍 Change Language</button>
+    </div>
+
+    <!-- Channel Link -->
+    <div class="channel-banner">
+        <p style="margin: 0 0 5px 0;" id="channelText">Jiunge na Channel yangu ya WhatsApp kwa update za kila siku!</p>
+        <a href="https://whatsapp.com/channel/0029VbCRC9b5fM5cruU8PF2M" target="_blank">👉 Jiunge Hapa</a>
+    </div>
+
+    <h1 id="appTitle">Dvary Music Hub</h1>
+    <input type="text" id="search" placeholder="Tafuta wimbo au msanii...">
+    <button class="search-btn" onclick="searchMusic()" id="searchBtn">Tafuta Sasa</button>
+    <div id="results" style="margin-top: 25px;"></div>
+    
+    <!-- Developer Info Section - Vidude Viduse Vitatu -->
+    <div class="developer-info">
+        <h3>🚀 Tunatengeneza App kwa Bei Nafuu!</h3>
+        <p>📱 <span class="highlight">Dvary Hub</span> - Tunatengeneza apps za kisasa kwa bei rahisi kwa kila mtu.</p>
+        <p>💻 <span class="highlight">Huduma zetu:</span> Mobile Apps, Websites, Music Apps, na Systems zote.</p>
+        <p>💰 <span class="highlight">Bei nafuu</span> - Ubora wa juu, gharama ndogo. Wasiliana nasi sasa!</p>
+        <p style="margin-top: 10px; font-size: 13px; opacity: 0.8;">📞 +255 123 456 789 | ✉️ dvaryhub@gmail.com</p>
+    </div>
+    
+    <div class="lang-indicator" id="langIndicator">Lugha: Kiswahili</div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAHNhUyFC7PlZGijkmYUnEc1GlEYJGHI40",
+        authDomain: "manyama2006-50664.firebaseapp.com",
+        projectId: "manyama2006-50664",
+        storageBucket: "manyama2006-50664.firebasestorage.app",
+        messagingSenderId: "749612577601",
+        appId: "1:749612577601:web:53295431132ddff30027c0",
+        measurementId: "G-9E858GX9HB"
+    };
+
+    const db = getFirestore(initializeApp(firebaseConfig));
+
+    // Global state
+    let currentTheme = 'dark';
+    let currentLang = 'sw';
+
+    // Language translations
+    const translations = {
+        sw: {
+            title: 'Dvary Music Hub',
+            searchPlaceholder: 'Tafuta wimbo au msanii...',
+            searchBtn: 'Tafuta Sasa',
+            channelText: 'Jiunge na Channel yangu ya WhatsApp kwa update za kila siku!',
+            noResults: 'Hatujapata nyimbo yoyote kwa jina hilo.',
+            networkError: 'Samahani, mtandao umegoma.',
+            searching: 'Inatafuta...',
+            saveSuccess: 'Imehifadhiwa kwenye kumbukumbu!',
+            emptySearch: 'Tafadhali andika jina la wimbo au msanii!',
+            langIndicator: 'Lugha: Kiswahili'
+        },
+        en: {
+            title: 'Dvary Music Hub',
+            searchPlaceholder: 'Search for a song or artist...',
+            searchBtn: 'Search Now',
+            channelText: 'Join my WhatsApp Channel for daily updates!',
+            noResults: 'No songs found for that name.',
+            networkError: 'Sorry, network error.',
+            searching: 'Searching...',
+            saveSuccess: 'Saved to favorites!',
+            emptySearch: 'Please enter a song or artist name!',
+            langIndicator: 'Language: English'
+        }
+    };
+
+    // Function to update UI language
+    function updateLanguage(lang) {
+        const t = translations[lang];
+        document.getElementById('appTitle').textContent = t.title;
+        document.getElementById('search').placeholder = t.searchPlaceholder;
+        document.getElementById('searchBtn').textContent = t.searchBtn;
+        document.getElementById('channelText').textContent = t.channelText;
+        document.getElementById('langIndicator').textContent = t.langIndicator;
+        currentLang = lang;
+    }
+
+    // Toggle Language function (exposed globally)
+    window.toggleLanguage = function() {
+        const newLang = currentLang === 'sw' ? 'en' : 'sw';
+        updateLanguage(newLang);
+    };
+
+    // Toggle Theme function (exposed globally)
+    window.toggleTheme = function() {
+        const body = document.body;
+        const container = document.getElementById('appContainer');
+        if (currentTheme === 'dark') {
+            body.classList.add('light-theme');
+            container.classList.add('light-theme');
+            currentTheme = 'light';
+        } else {
+            body.classList.remove('light-theme');
+            container.classList.remove('light-theme');
+            currentTheme = 'dark';
+        }
+    };
+
+    // Search Music function
+    window.searchMusic = async () => {
+        const query = document.getElementById('search').value;
+        const list = document.getElementById('results');
+        const t = translations[currentLang];
+        
+        if(!query) return alert(t.emptySearch);
+        
+        list.innerHTML = t.searching;
+
+        try {
+            const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=10`);
+            const data = await res.json();
+
+            list.innerHTML = "";
+            if (data.results && data.results.length > 0) {
+                data.results.forEach(song => {
+                    const div = document.createElement('div');
+                    div.className = "song-card";
+                    div.innerHTML = `
+                        <div style="display:flex; align-items:center;">
+                            <img src="${song.artworkUrl60}">
+                            <div><strong>${song.trackName}</strong><br><small>${song.artistName}</small></div>
+                        </div>
+                        <div class="btn-group">
+                            <a href="${song.previewUrl}" download="${song.trackName}.mp3" class="action-btn download-btn">Pakua MP3</a>
+                            <button class="action-btn save-btn" onclick="saveSong('${song.trackName.replace(/'/g, "")}', '${song.artistName}')">Hifadhi</button>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+            } else {
+                list.innerHTML = t.noResults;
+            }
+        } catch (error) {
+            list.innerHTML = t.networkError;
+        }
+    };
+
+    // Save Song function
+    window.saveSong = async (title, artist) => {
+        const t = translations[currentLang];
+        try {
+            await addDoc(collection(db, "favorites"), { title, artist, savedAt: new Date() });
+            alert(title + " " + t.saveSuccess);
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
+    };
+
+    // Set initial language
+    updateLanguage('sw');
+</script>
+</body>
+</html>
