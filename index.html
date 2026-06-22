@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ukurasa Wangu Mzuri</title>
+    <style>
+        /* ---------- RESET & BASE ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: #2d3436;
+        }
+
+        /* ---------- CONTAINER ---------- */
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 40px;
+            padding: 40px 35px;
+            box-shadow: 0 25px 50px -10px rgba(0, 0, 0, 0.25);
+            transition: 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* ---------- HEADER ---------- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.06);
+            padding-bottom: 20px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(45deg, #6c5ce7, #0984e3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        nav a {
+            margin-left: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            color: #2d3436;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: #6c5ce7;
+            transition: 0.3s;
+        }
+
+        nav a:hover {
+            color: #6c5ce7;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* ---------- HERO SECTION ---------- */
+        .hero {
+            text-align: center;
+            padding: 30px 10px 40px;
+            background: linear-gradient(120deg, #dfe6e9 0%, #b2bec3 100%);
+            border-radius: 30px;
+            margin-bottom: 40px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.1"><path d="M10 50 Q 30 20 50 50 T 90 50" stroke="%236c5ce7" stroke-width="2" fill="none"/><circle cx="30" cy="30" r="3" fill="%236c5ce7"/><circle cx="70" cy="70" r="3" fill="%236c5ce7"/></svg>');
+            background-size: cover;
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #6c5ce7, #0984e3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+
+        .hero p {
+            font-size: 20px;
+            color: #2d3436;
+            max-width: 600px;
+            margin: 0 auto 25px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #6c5ce7, #0984e3);
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(108, 92, 231, 0.35);
+            transition: 0.3s;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 14px 28px rgba(108, 92, 231, 0.5);
+        }
+
+        /* ---------- CARDS / GRID ---------- */
+        .section-title {
+            font-size: 30px;
+            font-weight: 700;
+            margin: 40px 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title span {
+            background: #6c5ce7;
+            color: white;
+            font-size: 20px;
+            border-radius: 40px;
+            padding: 0 18px;
+            line-height: 40px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: white;
+            padding: 28px 20px;
+            border-radius: 24px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.04);
+            transition: 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.02);
+            text-align: center;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(108, 92, 231, 0.12);
+            border-color: #6c5ce7;
+        }
+
+        .card .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .card h3 {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .card p {
+            color: #636e72;
+            line-height: 1.5;
+            font-size: 15px;
+        }
+
+        /* ---------- COUNTER (interactive) ---------- */
+        .counter-box {
+            background: linear-gradient(135deg, #dfe6e9, #f5f7fa);
+            border-radius: 30px;
+            padding: 30px 25px;
+            text-align: center;
+            margin: 30px 0 20px;
+        }
+
+        .counter-box h2 {
+            margin-bottom: 12px;
+        }
+
+        .counter-display {
+            font-size: 72px;
+            font-weight: 900;
+            background: linear-gradient(45deg, #6c5ce7, #0984e3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: inline-block;
+            min-width: 120px;
+        }
+
+        .counter-btns button {
+            background: white;
+            border: 2px solid #6c5ce7;
+            color: #6c5ce7;
+            font-size: 28px;
+            font-weight: 700;
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+            margin: 10px 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.04);
+        }
+
+        .counter-btns button:hover {
+            background: #6c5ce7;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .counter-btns .reset-btn {
+            background: #fd79a8;
+            border-color: #fd79a8;
+            color: white;
+            width: auto;
+            padding: 0 30px;
+            font-size: 18px;
+        }
+
+        .counter-btns .reset-btn:hover {
+            background: #e84393;
+            border-color: #e84393;
+        }
+
+        /* ---------- FOOTER ---------- */
+        footer {
+            margin-top: 40px;
+            padding-top: 25px;
+            border-top: 2px solid rgba(0, 0, 0, 0.06);
+            text-align: center;
+            font-size: 15px;
+            color: #636e72;
+        }
+
+        footer a {
+            color: #6c5ce7;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* ---------- RESPONSIVE ---------- */
+        @media (max-width: 700px) {
+            .container {
+                padding: 20px 18px;
+            }
+            .hero h1 {
+                font-size: 32px;
+            }
+            .hero p {
+                font-size: 17px;
+            }
+            header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            nav a {
+                margin: 0 12px;
+            }
+            .counter-display {
+                font-size: 52px;
+            }
+        }
+
+        @media (max-width: 450px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <header>
+        <div class="logo">✨ MySite</div>
+        <nav>
+            <a href="#">Nyumbani</a>
+            <a href="#">Huduma</a>
+            <a href="#">Mradi</a>
+            <a href="#">Mawasiliano</a>
+        </nav>
+    </header>
+
+    <!-- HERO -->
+    <section class="hero">
+        <h1>Karibu Sana!</h1>
+        <p>
+            Hii ni ukurasa wa mfano uliojengwa kwa HTML, CSS, na JavaScript.
+            Una mwonekano wa kisasa, unabadilika kwa simu, na una mwingiliano.
+        </p>
+        <button class="btn" id="welcomeBtn">💫 Bonyeza Mimi</button>
+    </section>
+
+    <!-- CARDS -->
+    <div class="section-title">
+        <span>🔥</span> Vipengele Vyetu
+    </div>
+    <div class="grid">
+        <div class="card">
+            <span class="icon">🚀</span>
+            <h3>Haraka</h3>
+            <p>Ukurasa huu umeundwa kwa kasi na utendaji bora kwenye vifaa vyote.</p>
+        </div>
+        <div class="card">
+            <span class="icon">🎨</span>
+            <h3>Ubunifu</h3>
+            <p>Rangi za kuvutia, vivuli, na mpangilio wa kisasa unaovutia macho.</p>
+        </div>
+        <div class="card">
+            <span class="icon">📱</span>
+            <h3>Responsive</h3>
+            <p>Inafanya kazi vizuri kwenye simu, kompyuta, na violesura vyote.</p>
+        </div>
+        <div class="card">
+            <span class="icon">⚡</span>
+            <h3>Interaktif</h3>
+            <p>Ina JavaScript kwa mwingiliano kama kaunta na ujumbe wa welcome.</p>
+        </div>
+    </div>
+
+    <!-- COUNTER (interactive) -->
+    <div class="counter-box">
+        <h2>🔢 Kaunta Inayohesabu</h2>
+        <div class="counter-display" id="counterDisplay">0</div>
+        <div class="counter-btns">
+            <button id="decrementBtn" aria-label="Punguza">−</button>
+            <button id="incrementBtn" aria-label="Ongeza">+</button>
+            <button class="reset-btn" id="resetBtn">↺ Weka Sifuri</button>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        &copy; 2026 <a href="#">MySite</a> — Imetengenezwa kwa ❤️ na DeepSeek.
+        <br />
+        <span style="font-size:13px; color:#b2bec3;">Toleo la 2.0 · Html ndefu kamili</span>
+    </footer>
+
+</div>
+
+<!-- ============ JAVASCRIPT ============ -->
+<script>
+    (function() {
+        'use strict';
+
+        // 1. WELCOME BUTTON – Alert ya kukaribisha
+        const welcomeBtn = document.getElementById('welcomeBtn');
+        if (welcomeBtn) {
+            welcomeBtn.addEventListener('click', function() {
+                alert('🌟 Karibu sana! Asante kwa kubonyeza.\nUkurasa huu umeandaliwa kwako kwa upendo.');
+            });
+        }
+
+        // 2. COUNTER LOGIC
+        const counterDisplay = document.getElementById('counterDisplay');
+        const incrementBtn = document.getElementById('incrementBtn');
+        const decrementBtn = document.getElementById('decrementBtn');
+        const resetBtn = document.getElementById('resetBtn');
+
+        let count = 0;
+
+        function updateCounter() {
+            if (counterDisplay) {
+                counterDisplay.textContent = count;
+            }
+        }
+
+        if (incrementBtn) {
+            incrementBtn.addEventListener('click', function() {
+                count += 1;
+                updateCounter();
+            });
+        }
+
+        if (decrementBtn) {
+            decrementBtn.addEventListener('click', function() {
+                count -= 1;
+                updateCounter();
+            });
+        }
+
+        if (resetBtn) {
+            resetBtn.addEventListener('click', function() {
+                count = 0;
+                updateCounter();
+            });
+        }
+
+        // 3. BONUS: Badilisha rangi ya kaunta inapofikia 10 au -10 (kwa ajili ya mchezo)
+        // Hii ni feature ya ziada ya kufurahisha
+        function checkCounterColor() {
+            if (!counterDisplay) return;
+            if (count >= 10) {
+                counterDisplay.style.background = 'linear-gradient(45deg, #00b894, #00cec9)';
+                counterDisplay.style.webkitBackgroundClip = 'text';
+                counterDisplay.style.webkitTextFillColor = 'transparent';
+                counterDisplay.style.backgroundClip = 'text';
+            } else if (count <= -10) {
+                counterDisplay.style.background = 'linear-gradient(45deg, #e17055, #d63031)';
+                counterDisplay.style.webkitBackgroundClip = 'text';
+                counterDisplay.style.webkitTextFillColor = 'transparent';
+                counterDisplay.style.backgroundClip = 'text';
+            } else {
+                // Rangi ya default
+                counterDisplay.style.background = 'linear-gradient(45deg, #6c5ce7, #0984e3)';
+                counterDisplay.style.webkitBackgroundClip = 'text';
+                counterDisplay.style.webkitTextFillColor = 'transparent';
+                counterDisplay.style.backgroundClip = 'text';
+            }
+        }
+
+        // Tuna override updateCounter ili kuangalia rangi pia
+        const originalUpdate = updateCounter;
+        updateCounter = function() {
+            originalUpdate();
+            checkCounterColor();
+        };
+
+        // Hakikisha kaunta ina rangi sahihi mwanzoni
+        updateCounter();
+
+        // 4. BONUS: Kubadilisha mandharinyuma ya kadi kwa kubonyeza kadi yenyewe?
+        const cards = document.querySelectorAll('.card');
+        cards.forEach((card, index) => {
+            card.addEventListener('click', function() {
+                // Badilisha rangi ya kadi kwa mfano
+                const colors = ['#dfe6e9', '#fd79a8', '#81ecec', '#ffeaa7'];
+                this.style.backgroundColor = colors[index % colors.length];
+                this.style.transition = '0.3s';
+            });
+        });
+
+        // 5. TAHADHARI: console message ya kujificha
+        console.log('🚀 Ukurasa umejaa mambo mazuri! Furahia!');
+
+        // 6. Ongeza animation ya kupendeza kwa vichwa vya cards
+        console.log('✅ JavaScript imeisha kupakiwa!');
+
+    })();
+</script>
+
+</body>
+</html>
