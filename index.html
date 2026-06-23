@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔑 DVARY MUSIC API</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        /* ============================================
+           ROOT VARIABLES
+           ============================================ */
+        :root {
+            --bg-primary: #0a0a1a;
+            --bg-secondary: #111128;
+            --bg-card: rgba(255,255,255,0.04);
+            --text-primary: #ffffff;
+            --text-secondary: #aaaacc;
+            --text-muted: #666688;
+            --border-color: rgba(255,255,255,0.06);
+            --shadow: 0 20px 60px rgba(0,0,0,0.5);
+            --gradient-1: #1DB954;
+            --gradient-2: #1ed760;
+            --gradient-3: #ff6b35;
+            --accent: #1DB954;
+            --accent-glow: rgba(29,185,84,0.2);
+            --input-bg: rgba(255,255,255,0.05);
+        }
+        
+        [data-theme="light"] {
+            --bg-primary: #f0f2f8;
+            --bg-secondary: #ffffff;
+            --bg-card: rgba(0,0,0,0.03);
+            --text-primary: #1a1a2e;
+            --text-secondary: #444466;
+            --text-muted: #8888aa;
+            --border-color: rgba(0,0,0,0.06);
+            --shadow: 0 20px 60px rgba(0,0,0,0.08);
+            --glass-bg: rgba(255,255,255,0.8);
+            --glass-border: rgba(0,0,0,0.05);
+            --nav-bg: rgba(240,242,248,0.95);
+            --input-bg: #f0f2f8;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+            overflow-x: hidden;
+        }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--gradient-1); border-radius: 10px; }
+        
+        /* ===== NAVBAR ===== */
+        .navbar {
+            position: sticky; top: 0; z-index: 100;
+            background: var(--nav-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .navbar .brand { display: flex; align-items: center; gap: 10px; }
+        .navbar .brand .logo-text { font-size: 22px; font-weight: 900; background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
+        .navbar .brand .logo-text i { margin-right: 8px; }
+        .navbar .right-section { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .navbar .right-section .nav-btn { padding: 8px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--input-bg); color: var(--text-secondary); cursor: pointer; font-size: 14px; transition: all 0.3s ease; }
+        .navbar .right-section .nav-btn:hover { border-color: var(--gradient-1); color: var(--gradient-1); }
+        .navbar .right-section .user-badge { padding: 6px 14px; border-radius: 20px; background: var(--accent-glow); color: var(--gradient-1); font-size: 12px; font-weight: 600; }
+        
+        /* ===== CONTAINER ===== */
+        .container { max-width: 1000px; margin: 0 auto; padding: 20px; position: relative; z-index: 1; }
+        
+        /* ===== HERO ===== */
+        .hero { text-align: center; padding: 30px 20px; }
+        .hero .icon { font-size: 60px; display: block; animation: pulseIcon 3s ease-in-out infinite; }
+        @keyframes pulseIcon { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .hero h1 { font-size: 36px; font-weight: 900; background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2), var(--gradient-3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { color: var(--text-secondary); font-size: 14px; letter-spacing: 2px; margin-top: 4px; }
+        
+        /* ===== AUTH CARDS ===== */
+        .auth-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        @media (max-width: 768px) { .auth-section { grid-template-columns: 1fr; } }
+        
+        .auth-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 25px;
+        }
+        .auth-card h2 { margin-bottom: 15px; color: var(--text-primary); }
+        .auth-card h2 i { color: var(--gradient-1); margin-right: 10px; }
+        .auth-card .form-group { margin-bottom: 12px; }
+        .auth-card .form-group label { display: block; color: var(--text-secondary); font-size: 12px; margin-bottom: 4px; }
+        .auth-card .form-group input { width: 100%; padding: 12px 16px; border: 2px solid var(--border-color); border-radius: 12px; background: var(--input-bg); color: var(--text-primary); font-size: 14px; outline: none; transition: all 0.3s ease; }
+        .auth-card .form-group input:focus { border-color: var(--gradient-1); box-shadow: 0 0 30px var(--accent-glow); }
+        .auth-card .btn { width: 100%; padding: 12px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2)); color: white; font-weight: 700; font-size: 16px; cursor: pointer; transition: all 0.3s ease; }
+        .auth-card .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px var(--accent-glow); }
+        .auth-card .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        /* ===== API KEY DISPLAY ===== */
+        .api-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            display: none;
+        }
+        .api-section.visible { display: block; }
+        .api-section .api-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .api-section .api-header h2 { color: var(--gradient-1); }
+        .api-section .api-key-box {
+            background: var(--input-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            word-break: break-all;
+        }
+        .api-section .api-key-box .copy-btn { padding: 8px 16px; border: none; border-radius: 8px; background: var(--gradient-1); color: white; cursor: pointer; font-weight: 600; transition: all 0.3s ease; }
+        .api-section .api-key-box .copy-btn:hover { transform: scale(1.05); }
+        .api-section .api-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 15px 0; }
+        .api-section .api-stats .stat { background: var(--input-bg); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid var(--border-color); }
+        .api-section .api-stats .stat .num { font-size: 24px; font-weight: 900; color: var(--gradient-1); }
+        .api-section .api-stats .stat .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* ===== SEARCH ===== */
+        .search-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            display: none;
+        }
+        .search-section.visible { display: block; }
+        .search-section .search-wrapper { display: flex; gap: 12px; flex-wrap: wrap; }
+        .search-section .search-wrapper input { flex: 1; min-width: 200px; padding: 14px 20px; border: 2px solid var(--border-color); border-radius: 14px; background: var(--input-bg); color: var(--text-primary); font-size: 16px; outline: none; transition: all 0.3s ease; }
+        .search-section .search-wrapper input:focus { border-color: var(--gradient-1); box-shadow: 0 0 30px var(--accent-glow); }
+        .search-section .search-wrapper input::placeholder { color: var(--text-muted); }
+        .search-section .search-wrapper .btn-search { padding: 14px 32px; border: none; border-radius: 14px; background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2)); color: white; font-weight: 700; font-size: 16px; cursor: pointer; transition: all 0.3s ease; }
+        .search-section .search-wrapper .btn-search:hover { transform: translateY(-2px); box-shadow: 0 8px 30px var(--accent-glow); }
+        
+        /* ===== RESULTS ===== */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .song-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+        .song-card:hover { transform: translateY(-5px); border-color: var(--gradient-1); box-shadow: 0 10px 40px var(--accent-glow); background: var(--bg-card-hover); }
+        .song-card .cover { width: 100%; aspect-ratio: 1/1; border-radius: 12px; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; font-size: 50px; color: var(--text-muted); margin-bottom: 12px; position: relative; overflow: hidden; }
+        .song-card .cover img { width: 100%; height: 100%; object-fit: cover; }
+        .song-card .info h3 { font-size: 14px; color: var(--text-primary); margin-bottom: 2px; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        .song-card .info p { font-size: 12px; color: var(--text-muted); }
+        .song-card .actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .song-card .actions button { flex: 1; padding: 8px; border: none; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .song-card .actions .btn-play { background: var(--gradient-1); color: white; }
+        .song-card .actions .btn-play:hover { transform: scale(1.05); }
+        
+        /* ===== WHATSAPP BANNER ===== */
+        .wa-banner {
+            display: block; margin: 15px auto; padding: 14px 20px; max-width: 600px;
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            border-radius: 16px; text-align: center; color: white;
+            text-decoration: none; transition: all 0.3s ease; border: 2px solid transparent;
+        }
+        .wa-banner:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 10px 40px rgba(37,211,102,0.3); border-color: #fff; }
+        .wa-banner i { font-size: 24px; margin-right: 10px; }
+        .wa-banner h3 { font-size: 16px; letter-spacing: 1px; }
+        .wa-banner p { font-size: 12px; opacity: 0.9; margin-top: 2px; }
+        
+        /* ===== NOTIFICATION ===== */
+        .notification {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            padding: 14px 24px; border-radius: 12px; z-index: 999;
+            font-weight: 500; max-width: 90%; text-align: center;
+            display: none; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        .notification.success { background: var(--gradient-1); color: white; }
+        .notification.error { background: #dc3545; color: white; }
+        .notification.info { background: var(--gradient-3); color: white; }
+        .notification.visible { display: block; animation: slideDown 0.4s ease; }
+        @keyframes slideDown { from { opacity: 0; transform: translateX(-50%) translateY(-30px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+        
+        /* ===== FOOTER ===== */
+        .footer { text-align: center; padding: 20px; color: var(--text-muted); font-size: 12px; border-top: 1px solid var(--border-color); margin-top: 20px; }
+        .footer .owner { color: var(--gradient-1); font-weight: 600; }
+        
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 480px) {
+            .hero h1 { font-size: 28px; }
+            .navbar .brand .logo-text { font-size: 18px; }
+            .auth-card { padding: 18px; }
+            .api-section .api-key-box { font-size: 13px; padding: 12px 16px; }
+            .results-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar">
+    <div class="brand">
+        <span class="logo-text"><i class="fas fa-music"></i>DVARY MUSIC API</span>
+    </div>
+    <div class="right-section">
+        <button class="nav-btn" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+        <span class="user-badge" id="userBadge">🔑 Get API Key</span>
+    </div>
+</nav>
+
+<!-- ===== NOTIFICATION ===== -->
+<div class="notification" id="notification"></div>
+
+<!-- ===== CONTAINER ===== -->
+<div class="container">
+
+    <!-- ===== HERO ===== -->
+    <div class="hero">
+        <span class="icon">🔑</span>
+        <h1>DVARY MUSIC API</h1>
+        <p>Jisajili • Pata API Key • Tafuta Nyimbo • Free</p>
+    </div>
+
+    <!-- ===== WHATSAPP BANNER ===== -->
+    <a href="https://whatsapp.com/channel/0029VbCRC9b5fM5cruU8PF2M" target="_blank" class="wa-banner">
+        <i class="fab fa-whatsapp"></i>
+        <h3>📱 Jiunge na Channel Yetu ya WhatsApp</h3>
+        <p>Pata updates za API, nyimbo mpya, na mambo mengi!</p>
+    </a>
+
+    <!-- ===== AUTH SECTION ===== -->
+    <div class="auth-section" id="authSection">
+        <!-- Register -->
+        <div class="auth-card">
+            <h2><i class="fas fa-user-plus"></i> Register</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="regName" placeholder="John Doe" required>
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="regEmail" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" placeholder="Min 6 characters" required minlength="6">
+                </div>
+                <button type="submit" class="btn" id="regBtn">📝 Register</button>
+            </form>
+        </div>
+
+        <!-- Login -->
+        <div class="auth-card">
+            <h2><i class="fas fa-sign-in-alt"></i> Login</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="loginEmail" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Your password" required>
+                </div>
+                <button type="submit" class="btn" id="loginBtn">🔑 Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== API KEY SECTION ===== -->
+    <div class="api-section" id="apiSection">
+        <div class="api-header">
+            <h2><i class="fas fa-key"></i> Your API Key</h2>
+            <button class="btn" onclick="generateNewKey()" style="padding:8px 16px; font-size:13px;">🔄 Generate New</button>
+        </div>
+        <div class="api-key-box">
+            <span id="apiKeyDisplay">No API Key</span>
+            <button class="copy-btn" onclick="copyApiKey()">📋 Copy</button>
+        </div>
+        <div class="api-stats">
+            <div class="stat">
+                <div class="num" id="apiRequests">0</div>
+                <div class="label">Requests</div>
+            </div>
+            <div class="stat">
+                <div class="num" id="apiLimit">1000</div>
+                <div class="label">Remaining</div>
+            </div>
+            <div class="stat">
+                <div class="num" id="apiStatus">Active</div>
+                <div class="label">Status</div>
+            </div>
+        </div>
+        <button class="btn" onclick="logout()" style="background:#dc3545; margin-top:10px;">🚪 Logout</button>
+    </div>
+
+    <!-- ===== SEARCH SECTION (Inaonekana baada ya login) ===== -->
+    <div class="search-section" id="searchSection">
+        <div class="search-wrapper">
+            <input type="text" id="searchInput" placeholder="🔍 Search for song, artist, or album..." onkeypress="if(event.key==='Enter') searchMusic()">
+            <button class="btn-search" onclick="searchMusic()" id="searchBtn">🔍 Search</button>
+        </div>
+    </div>
+
+    <!-- ===== RESULTS ===== -->
+    <div id="resultsContainer">
+        <div class="results-grid" id="resultsGrid">
+            <!-- Rendered by JavaScript -->
+        </div>
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <div class="footer">
+        <p>© 2026 <span class="owner">DVARY MUSIC API</span> • Free Music API</p>
+        <p style="font-size:10px; margin-top:4px;">🎵 Powered by iTunes • Get your API key today!</p>
+    </div>
+</div>
+
+<script>
+// ============================================
+// FIREBASE CONFIG
+// ============================================
+const firebaseConfig = {
+    apiKey: "AIzaSyAHNhUyFC7PlZGijkmYUnEc1GlEYJGHI40",
+    authDomain: "manyama2006-50664.firebaseapp.com",
+    projectId: "manyama2006-50664",
+    storageBucket: "manyama2006-50664.firebasestorage.app",
+    messagingSenderId: "749612577601",
+    appId: "1:749612577601:web:53295431132ddff30027c0",
+    measurementId: "G-9E858GX9HB"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// ============================================
+// STATE
+// ============================================
+let currentUser = null;
+let currentApiKey = null;
+let currentTheme = 'dark';
+
+// ============================================
+// DOM REFS
+// ============================================
+const notification = document.getElementById('notification');
+const authSection = document.getElementById('authSection');
+const apiSection = document.getElementById('apiSection');
+const searchSection = document.getElementById('searchSection');
+const apiKeyDisplay = document.getElementById('apiKeyDisplay');
+const apiRequests = document.getElementById('apiRequests');
+const apiLimit = document.getElementById('apiLimit');
+const apiStatus = document.getElementById('apiStatus');
+const userBadge = document.getElementById('userBadge');
+const resultsGrid = document.getElementById('resultsGrid');
+
+// ============================================
+// THEME
+// ============================================
+function toggleTheme() {
+    const html = document.documentElement;
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', currentTheme);
+    localStorage.setItem('dvary-api-theme', currentTheme);
+}
+
+const savedTheme = localStorage.getItem('dvary-api-theme') || 'dark';
+document.documentElement.setAttribute('data-theme', savedTheme);
+currentTheme = savedTheme;
+
+// ============================================
+// NOTIFICATION
+// ============================================
+function showNotification(message, type = 'info') {
+    notification.textContent = message;
+    notification.className = 'notification ' + type + ' visible';
+    setTimeout(() => {
+        notification.classList.remove('visible');
+    }, 4000);
+}
+
+// ============================================
+// GENERATE API KEY
+// ============================================
+function generateApiKey() {
+    const prefix = 'sk_live_';
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let key = prefix;
+    for (let i = 0; i < 32; i++) {
+        key += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return key;
+}
+
+// ============================================
+// REGISTER
+// ============================================
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const btn = document.getElementById('regBtn');
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
+    
+    try {
+        const userCred = await auth.createUserWithEmailAndPassword(email, password);
+        await userCred.user.updateProfile({ displayName: name });
+        
+        const apiKey = generateApiKey();
+        
+        await db.collection('api_users').doc(userCred.user.uid).set({
+            name: name,
+            email: email,
+            apiKey: apiKey,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            requests: 0,
+            limit: 1000,
+            status: 'active'
+        });
+        
+        showNotification('✅ Account created! API key generated.', 'success');
+        document.getElementById('registerForm').reset();
+        
+    } catch (error) {
+        showNotification('❌ ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '📝 Register';
+    }
+});
+
+// ============================================
+// LOGIN
+// ============================================
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const btn = document.getElementById('loginBtn');
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+    
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+        showNotification('✅ Welcome back!', 'success');
+        document.getElementById('loginForm').reset();
+    } catch (error) {
+        showNotification('❌ ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '🔑 Login';
+    }
+});
+
+// ============================================
+// LOGOUT
+// ============================================
+function logout() {
+    auth.signOut();
+    showNotification('👋 Logged out!', 'info');
+}
+
+// ============================================
+// GENERATE NEW KEY
+// ============================================
+async function generateNewKey() {
+    if (!currentUser) return;
+    
+    if (!confirm('Generate new API key? Old one will be invalidated.')) return;
+    
+    try {
+        const newKey = generateApiKey();
+        await db.collection('api_users').doc(currentUser.uid).update({
+            apiKey: newKey,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        currentApiKey = newKey;
+        apiKeyDisplay.textContent = newKey;
+        showNotification('✅ New API key generated!', 'success');
+    } catch (error) {
+        showNotification('❌ ' + error.message, 'error');
+    }
+}
+
+// ============================================
+// COPY API KEY
+// ============================================
+function copyApiKey() {
+    const text = apiKeyDisplay.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        showNotification('✅ API key copied!', 'success');
+    }).catch(() => {
+        const input = document.createElement('input');
+        input.value = text;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        showNotification('✅ API key copied!', 'success');
+    });
+}
+
+// ============================================
+// SEARCH MUSIC - iTunes API (Hakuna API key inahitajika!)
+// ============================================
+async function searchMusic() {
+    if (!currentUser) {
+        showNotification('⚠️ Please login first!', 'error');
+        return;
+    }
+    
+    const query = document.getElementById('searchInput').value.trim();
+    
+    if (!query) {
+        resultsGrid.innerHTML = `
+            <div style="text-align:center; padding:40px; color:var(--text-muted); grid-column:1/-1;">
+                <i class="fas fa-search" style="font-size:40px; display:block; margin-bottom:10px; opacity:0.3;"></i>
+                <p>Please enter a song or artist name</p>
+            </div>
+        `;
+        return;
+    }
+    
+    resultsGrid.innerHTML = `
+        <div style="text-align:center; padding:40px; grid-column:1/-1;">
+            <div style="display:inline-block; width:40px; height:40px; border:4px solid var(--border-color); border-radius:50%; border-top-color:var(--gradient-1); animation:spin 0.8s ease-in-out infinite;"></div>
+            <p style="color:var(--text-muted); margin-top:10px;">Searching...</p>
+        </div>
+    `;
+    
+    try {
+        // iTunes API - BURE KABISA!
+        const response = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=25`);
+        const data = await response.json();
+        
+        if (data.results && data.results.length > 0) {
+            renderSongs(data.results);
+            
+            // Update request count
+            if (currentUser) {
+                const docRef = db.collection('api_users').doc(currentUser.uid);
+                await docRef.update({
+                    requests: firebase.firestore.FieldValue.increment(1)
+                });
+            }
+        } else {
+            resultsGrid.innerHTML = `
+                <div style="text-align:center; padding:40px; color:var(--text-muted); grid-column:1/-1;">
+                    <i class="fas fa-music" style="font-size:40px; display:block; margin-bottom:10px; opacity:0.3;"></i>
+                    <p>No songs found</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Search error:', error);
+        resultsGrid.innerHTML = `
+            <div style="text-align:center; padding:40px; color:var(--text-muted); grid-column:1/-1;">
+                <i class="fas fa-exclamation-circle" style="font-size:40px; display:block; margin-bottom:10px; opacity:0.3;"></i>
+                <p>Error searching. Please try again.</p>
+            </div>
+        `;
+    }
+}
+
+// ============================================
+// RENDER SONGS
+// ============================================
+function renderSongs(songs) {
+    resultsGrid.innerHTML = songs.map((song, index) => {
+        const artwork = song.artworkUrl100 || song.artworkUrl60 || '';
+        const cover = artwork ? `<img src="${artwork}" alt="${song.trackName}">` : '🎵';
+        
+        return `
+            <div class="song-card" data-index="${index}">
+                <div class="cover">
+                    ${cover}
+                </div>
+                <div class="info">
+                    <h3>${song.trackName || 'Unknown'}</h3>
+                    <p>${song.artistName || 'Unknown Artist'}</p>
+                </div>
+                <div class="actions">
+                    ${song.previewUrl ? `<a href="${song.previewUrl}" target="_blank" class="btn-play" style="text-decoration:none; display:flex; align-items:center; justify-content:center;"><i class="fas fa-play"></i> Listen</a>` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// ============================================
+// UPDATE UI
+// ============================================
+function updateUI(user) {
+    if (user) {
+        currentUser = user;
+        authSection.style.display = 'none';
+        apiSection.classList.add('visible');
+        searchSection.classList.add('visible');
+        userBadge.textContent = '👤 ' + (user.displayName || user.email);
+        
+        db.collection('api_users').doc(user.uid).onSnapshot((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                currentApiKey = data.apiKey || 'No API key';
+                apiKeyDisplay.textContent = currentApiKey;
+                apiRequests.textContent = data.requests || 0;
+                apiLimit.textContent = (data.limit || 1000) - (data.requests || 0);
+                apiStatus.textContent = data.status || 'active';
+                apiStatus.style.color = data.status === 'active' ? 'var(--gradient-1)' : '#dc3545';
+            }
+        });
+    } else {
+        currentUser = null;
+        currentApiKey = null;
+        authSection.style.display = 'grid';
+        apiSection.classList.remove('visible');
+        searchSection.classList.remove('visible');
+        userBadge.textContent = '🔑 Get API Key';
+        resultsGrid.innerHTML = '';
+    }
+}
+
+// ============================================
+// AUTH STATE LISTENER
+// ============================================
+auth.onAuthStateChanged((user) => {
+    updateUI(user);
+});
+
+console.log('🎵 DVARY MUSIC API - Loaded!');
+console.log('🔑 Register to get your API key!');
+console.log('🎵 Search music with your API key!');
+</script>
+</body>
+</html>
