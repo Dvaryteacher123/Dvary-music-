@@ -1,7 +1,7 @@
 {
   "name": "dvary-music-api",
   "version": "1.0.0",
-  "description": "DVARY MUSIC API - Music Search API",
+  "description": "DVARY MUSIC API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
