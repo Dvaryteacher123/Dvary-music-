@@ -1,53 +1,177 @@
+// ============================================
+// FIREBASE CLOUD FUNCTIONS
+// ============================================
+
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const crypto = require('crypto');
 
 admin.initializeApp();
+const db = admin.firestore();
 
-// Function 1: Inatengeneza token mpya kwa mteja anayesajili jina lake
-exports.registerUser = functions.https.onRequest(async (req, res) => {
-    const name = req.body.name;
+// ============================================
+// CREATE TOKEN - Cloud Function
+// ============================================
+exports.createMyToken = functions.https.onCall(async (data, context) => {
+    // Check if user is authenticated
+    if (!context.auth) {
+        return {
+            success: false,
+            error: 'You must be logged in to generate a token.'
+        };
+    }
     
-    if (!name) {
-        return res.status(400).send({ error: "Tafadhali weka jina lako (name)." });
+    const { username, userId, email } = data;
+    
+    if (!username || username.trim() === '') {
+        return {
+            success: false,
+            error: 'Username is required.'
+        };
     }
-
-    // Kutengeneza token ndefu na salama
-    const newToken = 'dvary_' + crypto.randomBytes(32).toString('hex');
-
+    
     try {
-        // Hifadhi token kwenye Firestore
-        await admin.firestore().collection('api_keys').add({
-            token: newToken,
-            owner: name,
+        // Generate unique token
+        const token = generateSecureToken();
+        
+        // Save to Firestore
+        const tokenData = {
+            token: token,
+            owner: username.trim(),
+            userId: userId,
+            email: email || 'unknown',
             status: 'active',
-            createdAt: admin.firestore.FieldValue.serverTimestamp()
-        });
-
-        res.status(200).send({ message: "Token imetengenezwa!", token: newToken });
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            expiresAt: null, // Set expiry if needed
+            requests: 0,
+            limit: 1000
+        };
+        
+        // Save to api_keys collection
+        await db.collection('api_keys').doc(token).set(tokenData);
+        
+        // Also save to user's profile
+        await db.collection('users').doc(userId).set({
+            token: token,
+            username: username.trim(),
+            tokenCreatedAt: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        
+        return {
+            success: true,
+            token: token,
+            username: username.trim(),
+            message: 'Token generated successfully!'
+        };
+        
     } catch (error) {
-        res.status(500).send({ error: "Imeshindwa kuhifadhi token." });
+        console.error('Error creating token:', error);
+        return {
+            success: false,
+            error: error.message
+        };
     }
 });
 
-// Function 2: Inakagua kama token ya mteja ni sahihi na bado 'active'
-exports.checkToken = functions.https.onRequest(async (req, res) => {
-    const userToken = req.headers.authorization;
-
-    if (!userToken) {
-        return res.status(401).send({ error: "Token inahitajika!" });
+// ============================================
+// GENERATE SECURE TOKEN
+// ============================================
+function generateSecureToken() {
+    const prefix = 'sk_live_';
+    const length = 32;
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let token = prefix;
+    
+    for (let i = 0; i < length; i++) {
+        const randomIndex = crypto.randomInt(0, chars.length);
+        token += chars[randomIndex];
     }
+    
+    return token;
+}
 
-    // Kagua kwenye Firestore
-    const snapshot = await admin.firestore().collection('api_keys')
-        .where('token', '==', userToken)
-        .where('status', '==', 'active')
-        .get();
-
-    if (snapshot.empty) {
-        return res.status(403).send({ error: "Token siyo sahihi au imefungiwa!" });
+// ============================================
+// VERIFY TOKEN - For API endpoints
+// ============================================
+exports.verifyToken = functions.https.onCall(async (data, context) => {
+    const { token } = data;
+    
+    if (!token) {
+        return {
+            success: false,
+            error: 'Token is required'
+        };
     }
-
-    res.status(200).send({ status: "Success", message: "Token ni sahihi, karibu!" });
+    
+    try {
+        const doc = await db.collection('api_keys').doc(token).get();
+        
+        if (!doc.exists) {
+            return {
+                success: false,
+                error: 'Invalid token'
+            };
+        }
+        
+        const tokenData = doc.data();
+        
+        if (tokenData.status !== 'active') {
+            return {
+                success: false,
+                error: 'Token is inactive'
+            };
+        }
+        
+        return {
+            success: true,
+            data: tokenData
+        };
+        
+    } catch (error) {
+        return {
+            success: false,
+            error: error.message
+        };
+    }
 });
 
+// ============================================
+// REVOKE TOKEN - For admin
+// ============================================
+exports.revokeToken = functions.https.onCall(async (data, context) => {
+    // Check if user is authenticated
+    if (!context.auth) {
+        return {
+            success: false,
+            error: 'You must be logged in.'
+        };
+    }
+    
+    const { token } = data;
+    
+    if (!token) {
+        return {
+            success: false,
+            error: 'Token is required'
+        };
+    }
+    
+    try {
+        await db.collection('api_keys').doc(token).update({
+            status: 'revoked',
+            revokedAt: admin.firestore.FieldValue.serverTimestamp(),
+            revokedBy: context.auth.uid
+        });
+        
+        return {
+            success: true,
+            message: 'Token revoked successfully'
+        };
+        
+    } catch (error) {
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+});
