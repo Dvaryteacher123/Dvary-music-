@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔑 DVARY TOKEN GENERATOR</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <style>
+        /* ============================================
+           ROOT VARIABLES
+           ============================================ */
+        :root {
+            --bg-primary: #0a0a1a;
+            --bg-secondary: #111128;
+            --bg-card: rgba(255,255,255,0.04);
+            --text-primary: #ffffff;
+            --text-secondary: #aaaacc;
+            --text-muted: #666688;
+            --border-color: rgba(255,255,255,0.06);
+            --shadow: 0 20px 60px rgba(0,0,0,0.5);
+            --gradient-1: #1DB954;
+            --gradient-2: #1ed760;
+            --gradient-3: #ff6b35;
+            --accent: #1DB954;
+            --accent-glow: rgba(29,185,84,0.2);
+            --input-bg: rgba(255,255,255,0.05);
+        }
+        
+        [data-theme="light"] {
+            --bg-primary: #f0f2f8;
+            --bg-secondary: #ffffff;
+            --bg-card: rgba(0,0,0,0.03);
+            --text-primary: #1a1a2e;
+            --text-secondary: #444466;
+            --text-muted: #8888aa;
+            --border-color: rgba(0,0,0,0.06);
+            --shadow: 0 20px 60px rgba(0,0,0,0.08);
+            --input-bg: #f0f2f8;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+            overflow-x: hidden;
+        }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: var(--gradient-1); border-radius: 10px; }
+        
+        /* ============================================
+           SIDEBAR - Menu Button
+           ============================================ */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -340px;
+            width: 340px;
+            height: 100%;
+            background: var(--bg-secondary);
+            z-index: 300;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid var(--border-color);
+            box-shadow: 4px 0 40px rgba(0,0,0,0.3);
+        }
+        .sidebar.open { left: 0; }
+        
+        .sidebar .close-sidebar {
+            float: right;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 28px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .sidebar .close-sidebar:hover { color: #ff6b6b; }
+        
+        .sidebar .sidebar-brand {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+        .sidebar .sidebar-brand h2 {
+            font-size: 24px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .sidebar .sidebar-brand p {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+        
+        .sidebar .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        .sidebar .menu-item:hover {
+            background: var(--bg-card-hover);
+            color: var(--text-primary);
+        }
+        .sidebar .menu-item i { width: 24px; text-align: center; font-size: 18px; }
+        .sidebar .menu-item .badge {
+            margin-left: auto;
+            padding: 2px 10px;
+            border-radius: 20px;
+            background: var(--gradient-1);
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .sidebar .menu-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 15px 0;
+        }
+        .sidebar .menu-item.contact { color: #25D366; }
+        .sidebar .menu-item.contact:hover { background: rgba(37,211,102,0.1); }
+        .sidebar .menu-item.whatsapp { color: #25D366; }
+        .sidebar .menu-item.whatsapp:hover { background: rgba(37,211,102,0.1); }
+        
+        /* ============================================
+           SIDEBAR OVERLAY
+           ============================================ */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 299;
+            display: none;
+        }
+        .sidebar-overlay.visible { display: block; }
+        
+        /* ============================================
+           NAVBAR
+           ============================================ */
+        .navbar {
+            position: sticky; top: 0; z-index: 100;
+            background: var(--nav-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .navbar .left { display: flex; align-items: center; gap: 15px; }
+        .navbar .left .menu-btn {
+            background: none; border: none;
+            color: var(--text-primary);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .navbar .left .menu-btn:hover { color: var(--gradient-1); }
+        .navbar .brand { display: flex; align-items: center; gap: 10px; }
+        .navbar .brand .logo-text { font-size: 22px; font-weight: 900; background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .navbar .brand .logo-text i { margin-right: 8px; }
+        .navbar .right-section { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .navbar .right-section .nav-btn { padding: 8px 14px; border: 1px solid var(--border-color); border-radius: 10px; background: var(--input-bg); color: var(--text-secondary); cursor: pointer; font-size: 14px; transition: all 0.3s ease; }
+        .navbar .right-section .nav-btn:hover { border-color: var(--gradient-1); color: var(--gradient-1); }
+        .navbar .right-section .user-badge { padding: 6px 14px; border-radius: 20px; background: var(--accent-glow); color: var(--gradient-1); font-size: 12px; font-weight: 600; }
+        
+        /* ============================================
+           CONTAINER
+           ============================================ */
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; position: relative; z-index: 1; }
+        
+        /* ============================================
+           HERO
+           ============================================ */
+        .hero { text-align: center; padding: 30px 20px; }
+        .hero .icon { font-size: 60px; display: block; animation: pulseIcon 3s ease-in-out infinite; }
+        @keyframes pulseIcon { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .hero h1 { font-size: 36px; font-weight: 900; background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2), var(--gradient-3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero p { color: var(--text-secondary); font-size: 14px; letter-spacing: 2px; margin-top: 4px; }
+        
+        /* ============================================
+           TOKEN GENERATOR
+           ============================================ */
+        .token-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        .token-section h2 { color: var(--text-primary); margin-bottom: 20px; }
+        .token-section h2 i { color: var(--gradient-1); margin-right: 10px; }
+        
+        .token-section .form-group { margin-bottom: 15px; }
+        .token-section .form-group label { display: block; color: var(--text-secondary); font-size: 13px; margin-bottom: 5px; }
+        .token-section .form-group input {
+            width: 100%; padding: 14px 18px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .token-section .form-group input:focus { border-color: var(--gradient-1); box-shadow: 0 0 30px var(--accent-glow); }
+        .token-section .form-group input::placeholder { color: var(--text-muted); }
+        
+        .token-section .btn-generate {
+            width: 100%; padding: 14px;
+            border: none; border-radius: 12px;
+            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+            color: white; font-weight: 700; font-size: 16px;
+            cursor: pointer; transition: all 0.3s ease;
+        }
+        .token-section .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 8px 30px var(--accent-glow); }
+        .token-section .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        /* ===== TOKEN DISPLAY ===== */
+        .token-display {
+            background: var(--input-bg);
+            border: 2px solid var(--gradient-1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        .token-display.visible { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .token-display .token-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px; }
+        .token-display .token-value {
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            color: var(--gradient-1);
+            word-break: break-all;
+            padding: 15px 0;
+        }
+        .token-display .token-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .token-display .token-actions button {
+            padding: 8px 20px;
+            border: none; border-radius: 8px;
+            font-weight: 600; font-size: 13px;
+            cursor: pointer; transition: all 0.3s ease;
+        }
+        .token-display .token-actions .btn-copy { background: var(--gradient-1); color: white; }
+        .token-display .token-actions .btn-copy:hover { transform: scale(1.05); }
+        .token-display .token-actions .btn-download { background: var(--gradient-3); color: white; }
+        .token-display .token-actions .btn-download:hover { transform: scale(1.05); }
+        
+        /* ===== STATUS ===== */
+        .status-msg {
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-top: 15px;
+            display: none;
+            font-weight: 500;
+        }
+        .status-msg.visible { display: block; }
+        .status-msg.success { background: rgba(29,185,84,0.1); border: 1px solid rgba(29,185,84,0.2); color: #1DB954; }
+        .status-msg.error { background: rgba(220,53,69,0.1); border: 1px solid rgba(220,53,69,0.2); color: #dc3545; }
+        .status-msg.info { background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.2); color: #ffd700; }
+        
+        /* ============================================
+           WHATSAPP BANNER (Mbele - Imeondolewa)
+           ============================================ */
+        /* WA banner imeondolewa mbele, imewekwa kwenye Menu */
+        
+        /* ============================================
+           FOOTER
+           ============================================ */
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 12px;
+            margin-top: 40px;
+        }
+        .footer .owner { color: var(--gradient-1); font-weight: 600; }
+        
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 768px) {
+            .sidebar { width: 300px; left: -300px; }
+            .hero h1 { font-size: 28px; }
+            .token-section { padding: 20px; }
+        }
+        @media (max-width: 480px) {
+            .sidebar { width: 280px; left: -280px; }
+            .hero h1 { font-size: 24px; }
+            .token-display .token-value { font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ==========================================
+SIDEBAR - Menu Button
+========================================== -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<div class="sidebar" id="sidebar">
+    <button class="close-sidebar" onclick="toggleSidebar()">✕</button>
+    
+    <div class="sidebar-brand">
+        <h2>🔑 DVARY TOKEN</h2>
+        <p>Token Generator System</p>
+    </div>
+    
+    <div class="menu-item" onclick="navigateTo('home')">
+        <i class="fas fa-home"></i> Home
+    </div>
+    <div class="menu-item" onclick="navigateTo('generate')">
+        <i class="fas fa-key"></i> Generate Token
+        <span class="badge">New</span>
+    </div>
+    
+    <div class="menu-divider"></div>
+    
+    <div class="menu-item" onclick="navigateTo('about')">
+        <i class="fas fa-info-circle"></i> About Us
+    </div>
+    <div class="menu-item" onclick="navigateTo('features')">
+        <i class="fas fa-star"></i> Features
+    </div>
+    <div class="menu-item contact" onclick="navigateTo('contact')">
+        <i class="fas fa-phone"></i> Contact 0724525910
+    </div>
+    
+    <!-- ===== WHATSAPP CHANNEL KWENYE MENU ===== -->
+    <div class="menu-item whatsapp" onclick="window.open('https://whatsapp.com/channel/0029VbCRC9b5fM5cruU8PF2M', '_blank')">
+        <i class="fab fa-whatsapp"></i> WhatsApp Channel
+        <span class="badge" style="background:#25D366;">Join</span>
+    </div>
+    
+    <div class="menu-divider"></div>
+    
+    <div class="menu-item" onclick="logout()" style="color:#dc3545;">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </div>
+</div>
+
+<!-- ==========================================
+NAVBAR
+========================================== -->
+<nav class="navbar">
+    <div class="left">
+        <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+        <div class="brand">
+            <span class="logo-text"><i class="fas fa-key"></i>DVARY</span>
+        </div>
+    </div>
+    <div class="right-section">
+        <button class="nav-btn" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+        <span class="user-badge" id="userBadge">🔑 Get Token</span>
+    </div>
+</nav>
+
+<!-- ==========================================
+CONTAINER
+========================================== -->
+<div class="container">
+
+    <!-- ===== HERO ===== -->
+    <div class="hero" id="homeSection">
+        <span class="icon">🔑</span>
+        <h1>DVARY TOKEN GENERATOR</h1>
+        <p>Jisajili • Generate Token • Tumia API</p>
+    </div>
+
+    <!-- ===== TOKEN GENERATOR ===== -->
+    <div class="token-section" id="tokenSection">
+        <h2><i class="fas fa-key"></i> Generate Your Token</h2>
+        
+        <div class="form-group">
+            <label>👤 Enter Your Username</label>
+            <input type="text" id="usernameInput" placeholder="e.g. JohnDoe or your name..." />
+        </div>
+        
+        <button class="btn-generate" id="generateBtn" onclick="generateToken()">
+            <i class="fas fa-rocket"></i> Generate API Token
+        </button>
+        
+        <!-- Status Message -->
+        <div class="status-msg" id="statusMsg"></div>
+        
+        <!-- Token Display -->
+        <div class="token-display" id="tokenDisplay">
+            <div class="token-label">🔐 Your API Token</div>
+            <div class="token-value" id="tokenValue">sk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</div>
+            <div class="token-actions">
+                <button class="btn-copy" onclick="copyToken()"><i class="fas fa-copy"></i> Copy</button>
+                <button class="btn-download" onclick="downloadToken()"><i class="fas fa-download"></i> Download</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <div class="footer">
+        <p>© 2026 <span class="owner">DVARY DEVELOPER</span> • Token Generator</p>
+        <p style="font-size:10px; margin-top:4px; color:var(--text-muted);">🔑 Generate your API token securely</p>
+    </div>
+</div>
+
+<script>
+// ============================================
+// FIREBASE CONFIG
+// ============================================
+const firebaseConfig = {
+    apiKey: "AIzaSyAHNhUyFC7PlZGijkmYUnEc1GlEYJGHI40",
+    authDomain: "manyama2006-50664.firebaseapp.com",
+    projectId: "manyama2006-50664",
+    storageBucket: "manyama2006-50664.firebasestorage.app",
+    messagingSenderId: "749612577601",
+    appId: "1:749612577601:web:53295431132ddff30027c0",
+    measurementId: "G-9E858GX9HB"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const functions = firebase.functions();
+
+// ============================================
+// STATE
+// ============================================
+let currentUser = null;
+let currentToken = null;
+let currentTheme = 'dark';
+
+// ============================================
+// DOM REFS
+// ============================================
+const notification = document.getElementById('notification');
+const usernameInput = document.getElementById('usernameInput');
+const generateBtn = document.getElementById('generateBtn');
+const tokenDisplay = document.getElementById('tokenDisplay');
+const tokenValue = document.getElementById('tokenValue');
+const statusMsg = document.getElementById('statusMsg');
+const userBadge = document.getElementById('userBadge');
+
+// ============================================
+// SIDEBAR
+// ============================================
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('visible');
+}
+
+// Close sidebar on outside click
+document.addEventListener('click', function(e) {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (sidebar.classList.contains('open') && !sidebar.contains(e.target) && !e.target.closest('.menu-btn')) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('visible');
+    }
+});
+
+function navigateTo(section) {
+    toggleSidebar();
+    if (section === 'home') {
+        document.getElementById('homeSection').scrollIntoView({ behavior: 'smooth' });
+    } else if (section === 'generate') {
+        document.getElementById('tokenSection').scrollIntoView({ behavior: 'smooth' });
+        usernameInput.focus();
+    } else if (section === 'about') {
+        document.querySelector('.footer').scrollIntoView({ behavior: 'smooth' });
+        showStatus('📖 DVARY TOKEN - Secure API Token Generator', 'info');
+    } else if (section === 'features') {
+        document.querySelector('.footer').scrollIntoView({ behavior: 'smooth' });
+        showStatus('⭐ Features: Token Generation, Copy, Download, Secure Storage', 'info');
+    } else if (section === 'contact') {
+        showStatus('📞 Contact: 0724525910 | ✉️ dvary@gmail.com', 'info');
+    }
+}
+
+// ============================================
+// THEME
+// ============================================
+function toggleTheme() {
+    const html = document.documentElement;
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', currentTheme);
+    localStorage.setItem('dvary-theme', currentTheme);
+}
+const savedTheme = localStorage.getItem('dvary-theme') || 'dark';
+document.documentElement.setAttribute('data-theme', savedTheme);
+currentTheme = savedTheme;
+
+// ============================================
+// STATUS MESSAGE
+// ============================================
+function showStatus(message, type = 'info') {
+    statusMsg.textContent = message;
+    statusMsg.className = 'status-msg visible ' + type;
+    setTimeout(() => {
+        statusMsg.classList.remove('visible');
+    }, 6000);
+}
+
+// ============================================
+// GENERATE TOKEN - CLOUD FUNCTION
+// ============================================
+async function generateToken() {
+    const username = usernameInput.value.trim();
+    
+    if (!username) {
+        showStatus('⚠️ Please enter your username first!', 'error');
+        usernameInput.focus();
+        return;
+    }
+    
+    if (!currentUser) {
+        showStatus('⚠️ Please login first!', 'error');
+        return;
+    }
+    
+    generateBtn.disabled = true;
+    generateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    tokenDisplay.classList.remove('visible');
+    
+    try {
+        // Call Cloud Function
+        const createToken = functions.httpsCallable('createMyToken');
+        const result = await createToken({
+            username: username,
+            userId: currentUser.uid,
+            email: currentUser.email
+        });
+        
+        const data = result.data;
+        
+        if (data.success) {
+            currentToken = data.token;
+            tokenValue.textContent = data.token;
+            tokenDisplay.classList.add('visible');
+            showStatus('✅ Token generated successfully! Copy it now.', 'success');
+            
+            // Save to user's profile
+            await db.collection('users').doc(currentUser.uid).set({
+                token: data.token,
+                username: username,
+                tokenCreatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+            
+        } else {
+            showStatus('❌ ' + (data.error || 'Failed to generate token'), 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error generating token:', error);
+        showStatus('❌ Error: ' + error.message, 'error');
+    } finally {
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = '<i class="fas fa-rocket"></i> Generate API Token';
+    }
+}
+
+// ============================================
+// COPY TOKEN
+// ============================================
+function copyToken() {
+    const text = tokenValue.textContent;
+    if (text === 'sk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') {
+        showStatus('⚠️ No token to copy. Generate one first!', 'error');
+        return;
+    }
+    
+    navigator.clipboard.writeText(text).then(() => {
+        showStatus('✅ Token copied to clipboard!', 'success');
+    }).catch(() => {
+        const input = document.createElement('input');
+        input.value = text;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        showStatus('✅ Token copied to clipboard!', 'success');
+    });
+}
+
+// ============================================
+// DOWNLOAD TOKEN
+// ============================================
+function downloadToken() {
+    const text = tokenValue.textContent;
+    if (text === 'sk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') {
+        showStatus('⚠️ No token to download. Generate one first!', 'error');
+        return;
+    }
+    
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'dvary-token.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showStatus('✅ Token downloaded as .txt file!', 'success');
+}
+
+// ============================================
+// AUTH
+// ============================================
+document.getElementById('registerForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    // ... register logic
+});
+
+document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    // ... login logic
+});
+
+function logout() {
+    auth.signOut();
+    showStatus('👋 Logged out!', 'info');
+    tokenDisplay.classList.remove('visible');
+}
+
+// ============================================
+// UPDATE UI
+// ============================================
+function updateUI(user) {
+    if (user) {
+        currentUser = user;
+        userBadge.textContent = '👤 ' + (user.displayName || user.email);
+        
+        // Check if user has existing token
+        db.collection('users').doc(user.uid).get().then((doc) => {
+            if (doc.exists && doc.data().token) {
+                currentToken = doc.data().token;
+                tokenValue.textContent = currentToken;
+                tokenDisplay.classList.add('visible');
+            }
+        }).catch(err => console.error('Error checking token:', err));
+        
+    } else {
+        currentUser = null;
+        currentToken = null;
+        userBadge.textContent = '🔑 Get Token';
+        tokenDisplay.classList.remove('visible');
+    }
+}
+
+// ============================================
+// AUTH STATE LISTENER
+// ============================================
+auth.onAuthStateChanged((user) => {
+    updateUI(user);
+});
+
+// ============================================
+// KEYBOARD SHORTCUT - Enter to generate
+// ============================================
+usernameInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        generateToken();
+    }
+});
+
+console.log('🔑 DVARY TOKEN GENERATOR - Loaded!');
+console.log('📱 Enter username and click Generate Token');
+console.log('🔐 Token is stored securely in Firebase');
+console.log('👨‍💻 DVARY DEVELOPER 2026');
+</script>
+</body>
+</html>
