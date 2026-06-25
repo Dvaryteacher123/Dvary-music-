@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dvary Music Hub</title>
+    <style>
+        * {
+            transition: all 0.3s ease;
+        }
+        body {
+            font-family: sans-serif;
+            background: #121212;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 650px;
+            background: #181818;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .light-theme {
+            background: #f5f5f5;
+            color: #121212;
+        }
+        .light-theme .container {
+            background: #ffffff;
+        }
+        .light-theme .song-card {
+            background: #e8e8e8;
+        }
+        .light-theme .channel-banner {
+            background: #128C7E;
+        }
+        .light-theme .action-btn {
+            color: white;
+        }
+        .light-theme .favorites-card {
+            background: #f0f0f0;
+        }
+        .light-theme #chatMessages {
+            background: #f0f0f0 !important;
+        }
+        .light-theme .chat-input {
+            background: #e8e8e8 !important;
+            color: #121212 !important;
+        }
+        .light-theme .developer-info {
+            background: #f0f0f0;
+            border-color: #ddd;
+        }
+        .light-theme .control-btn {
+            background: #ddd;
+            color: #121212;
+        }
+        .light-theme input {
+            background: #e8e8e8;
+            color: #121212;
+        }
+        .light-theme .chatbot-section {
+            border-top-color: #ddd;
+        }
+
+        .channel-banner {
+            background: #25D366;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .channel-banner a {
+            color: #fff;
+            font-weight: bold;
+            text-decoration: none;
+            font-size: 1.1em;
+        }
+
+        input {
+            width: 80%;
+            padding: 15px;
+            border-radius: 25px;
+            border: none;
+            margin-bottom: 15px;
+            outline: none;
+            font-size: 16px;
+            background: #2a2a2a;
+            color: white;
+        }
+        .light-theme input {
+            background: #e8e8e8;
+            color: #121212;
+        }
+        button.search-btn {
+            padding: 15px 30px;
+            border-radius: 25px;
+            border: none;
+            background: #1DB954;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .song-card {
+            background: #282828;
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-align: left;
+        }
+        img {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            margin-right: 15px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .action-btn {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            text-decoration: none;
+            color: white;
+        }
+        .download-btn {
+            background: #007bff;
+        }
+        .save-btn {
+            background: #444;
+        }
+        .play-btn {
+            background: #1DB954;
+        }
+        .delete-btn {
+            background: #dc3545;
+        }
+
+        .top-controls {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .control-btn {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            background: #333;
+            color: white;
+        }
+
+        .developer-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 12px;
+            border: 1px solid #3a3a3a;
+        }
+        .developer-info h3 {
+            color: #25D366;
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        .developer-info p {
+            margin: 5px 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .developer-info .highlight {
+            color: #25D366;
+            font-weight: bold;
+        }
+
+        .lang-indicator {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 10px;
+        }
+
+        .audio-player {
+            background: #282828;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 15px 0;
+            display: none;
+        }
+        .light-theme .audio-player {
+            background: #e8e8e8;
+        }
+        .audio-player.active {
+            display: block;
+        }
+        .audio-player audio {
+            width: 100%;
+        }
+        .audio-player .song-info {
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .favorites-section {
+            margin-top: 20px;
+        }
+        .favorites-card {
+            background: #282828;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .light-theme .favorites-card {
+            background: #f0f0f0;
+        }
+        .favorites-card .song-info {
+            text-align: left;
+        }
+        .favorites-card .song-info small {
+            opacity: 0.7;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* ===== CHATBOT STYLES ===== */
+        .chatbot-section {
+            margin-top: 30px;
+            border-top: 1px solid #333;
+            padding-top: 20px;
+        }
+        .chatbot-section h3 {
+            color: #1DB954;
+            margin-bottom: 15px;
+        }
+        #chatMessages {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 15px;
+            height: 200px;
+            overflow-y: auto;
+            text-align: left;
+            margin-bottom: 10px;
+        }
+        #chatMessages p {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+        #chatMessages .user-msg {
+            color: #6cb2ff;
+            text-align: right;
+        }
+        #chatMessages .bot-msg {
+            color: #7dffb3;
+            text-align: left;
+        }
+        #chatMessages .typing {
+            color: #888;
+            font-style: italic;
+        }
+        #chatMessages .error-msg {
+            color: #ff6b6b;
+            text-align: left;
+        }
+        #chatMessages .system-msg {
+            color: #ffd200;
+            text-align: center;
+            font-style: italic;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input-wrapper input {
+            flex: 1;
+            padding: 12px 18px;
+            border-radius: 25px;
+            border: none;
+            outline: none;
+            font-size: 15px;
+            background: #2a2a2a;
+            color: white;
+            margin-bottom: 0;
+        }
+        .light-theme .chat-input-wrapper input {
+            background: #e8e8e8;
+            color: #121212;
+        }
+        .chat-input-wrapper button {
+            padding: 12px 25px;
+            border-radius: 25px;
+            border: none;
+            background: #1DB954;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .chat-input-wrapper button:hover {
+            opacity: 0.9;
+        }
+        .chat-input-wrapper button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Copy button */
+        .copy-btn {
+            background: #007bff;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+        .copy-btn:hover {
+            background: #0056b3;
+        }
+        .copy-success {
+            background: #28a745 !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="appContainer">
+        <!-- Copy Button -->
+        <div style="text-align: right; margin-bottom: 10px;">
+            <button class="copy-btn" onclick="copyCode()">📋 Copy Code</button>
+        </div>
+
+        <!-- Top Controls -->
+        <div class="top-controls">
+            <button class="control-btn" onclick="toggleTheme()">🌓 Theme</button>
+            <button class="control-btn" onclick="toggleLanguage()">🌍 Language</button>
+            <button class="control-btn" onclick="showFavorites()">❤️ Favorites</button>
+        </div>
+
+        <!-- Channel Link -->
+        <div class="channel-banner">
+            <p style="margin: 0 0 5px 0;" id="channelText">Jiunge na Channel yangu ya WhatsApp kwa update za kila siku!</p>
+            <a href="https://whatsapp.com/channel/0029VbCRC9b5fM5cruU8PF2M" target="_blank">👉 Jiunge Hapa</a>
+        </div>
+
+        <h1 id="appTitle">Dvary Music Hub</h1>
+
+        <!-- Search -->
+        <input type="text" id="search" placeholder="Tafuta wimbo au msanii...">
+        <button class="search-btn" onclick="searchMusic()" id="searchBtn">Tafuta Sasa</button>
+
+        <!-- Results -->
+        <div id="results" style="margin-top: 25px;"></div>
+
+        <!-- Audio Player -->
+        <div class="audio-player" id="audioPlayer">
+            <div class="song-info" id="currentSong">Now Playing: -</div>
+            <audio controls id="audioControl">
+                <source id="audioSource" src="" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+
+        <!-- Favorites Section -->
+        <div id="favoritesSection" class="hidden favorites-section">
+            <h3>❤️ Favorites</h3>
+            <div id="favoritesList"></div>
+            <button onclick="closeFavorites()" class="control-btn" style="margin-top: 10px;">Close</button>
+        </div>
+
+        <!-- ===== CHATBOT SECTION ===== -->
+        <div class="chatbot-section">
+            <h3>🤖 Chat na AI Msaidizi</h3>
+            <div id="chatMessages">
+                <p class="system-msg">👋 Habari! Niulize chochote kuhusu muziki au app hii.</p>
+            </div>
+            <div class="chat-input-wrapper">
+                <input type="text" id="chatInput" placeholder="Andika swali lako..." class="chat-input">
+                <button id="chatSendBtn" onclick="sendChatMessage()">💬 Tuma</button>
+            </div>
+            <p style="font-size: 11px; opacity: 0.5; margin-top: 8px;">Inaendeshwa na Gemini AI</p>
+        </div>
+
+        <!-- Developer Info -->
+        <div class="developer-info">
+            <h3>🚀 Tunatengeneza App kwa Bei Nafuu!</h3>
+            <p>📱 <span class="highlight">Dvary Hub</span> - Tunatengeneza apps za kisasa kwa bei rahisi kwa kila mtu.</p>
+            <p>💻 <span class="highlight">Huduma zetu:</span> Mobile Apps, Websites, Music Apps, na Systems zote.</p>
+            <p>💰 <span class="highlight">Bei nafuu</span> - Ubora wa juu, gharama ndogo. Wasiliana nasi sasa!</p>
+            <p style="margin-top: 10px; font-size: 13px; opacity: 0.8;">📞 +255 123 456 789 | ✉️ dvaryhub@gmail.com</p>
+        </div>
+
+        <div class="lang-indicator" id="langIndicator">Lugha: Kiswahili</div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAHNhUyFC7PlZGijkmYUnEc1GlEYJGHI40",
+            authDomain: "manyama2006-50664.firebaseapp.com",
+            projectId: "manyama2006-50664",
+            storageBucket: "manyama2006-50664.firebasestorage.app",
+            messagingSenderId: "749612577601",
+            appId: "1:749612577601:web:53295431132ddff30027c0",
+            measurementId: "G-9E858GX9HB"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let currentTheme = 'dark';
+        let currentLang = 'sw';
+        let isChatting = false;
+
+        const translations = {
+            sw: {
+                title: 'Dvary Music Hub',
+                searchPlaceholder: 'Tafuta wimbo au msanii...',
+                searchBtn: 'Tafuta Sasa',
+                channelText: 'Jiunge na Channel yangu ya WhatsApp kwa update za kila siku!',
+                noResults: 'Hatujapata nyimbo yoyote kwa jina hilo.',
+                networkError: 'Samahani, mtandao umegoma.',
+                searching: 'Inatafuta...',
+                saveSuccess: 'Imehifadhiwa kwenye kumbukumbu!',
+                emptySearch: 'Tafadhali andika jina la wimbo au msanii!',
+                langIndicator: 'Lugha: Kiswahili',
+                play: 'Cheza',
+                delete: 'Futa',
+                noFavorites: 'Hujahifadhi nyimbo yoyote bado',
+                nowPlaying: 'Inacheza sasa:',
+                chatPlaceholder: 'Andika swali lako...',
+                chatWelcome: '👋 Habari! Niulize chochote kuhusu muziki au app hii.',
+                chatError: '❌ Samahani, kuna tatizo. Jaribu tena.',
+                chatNetworkError: '❌ Tatizo la mtandao. Jaribu tena.',
+                chatTyping: '🤖 Inaandika...'
+            },
+            en: {
+                title: 'Dvary Music Hub',
+                searchPlaceholder: 'Search for a song or artist...',
+                searchBtn: 'Search Now',
+                channelText: 'Join my WhatsApp Channel for daily updates!',
+                noResults: 'No songs found for that name.',
+                networkError: 'Sorry, network error.',
+                searching: 'Searching...',
+                saveSuccess: 'Saved to favorites!',
+                emptySearch: 'Please enter a song or artist name!',
+                langIndicator: 'Language: English',
+                play: 'Play',
+                delete: 'Delete',
+                noFavorites: 'No favorites saved yet',
+                nowPlaying: 'Now Playing:',
+                chatPlaceholder: 'Ask me anything...',
+                chatWelcome: '👋 Hi! Ask me anything about music or this app.',
+                chatError: '❌ Sorry, there was an error. Please try again.',
+                chatNetworkError: '❌ Network error. Please try again.',
+                chatTyping: '🤖 Typing...'
+            }
+        };
+
+        function updateLanguage(lang) {
+            const t = translations[lang];
+            document.getElementById('appTitle').textContent = t.title;
+            document.getElementById('search').placeholder = t.searchPlaceholder;
+            document.getElementById('searchBtn').textContent = t.searchBtn;
+            document.getElementById('channelText').textContent = t.channelText;
+            document.getElementById('langIndicator').textContent = t.langIndicator;
+            document.getElementById('chatInput').placeholder = t.chatPlaceholder;
+
+            const messages = document.getElementById('chatMessages');
+            if (messages.children.length === 1) {
+                messages.innerHTML = `<p class="system-msg">${t.chatWelcome}</p>`;
+            }
+
+            currentLang = lang;
+        }
+
+        window.toggleLanguage = function() {
+            const newLang = currentLang === 'sw' ? 'en' : 'sw';
+            updateLanguage(newLang);
+        };
+
+        window.toggleTheme = function() {
+            const body = document.body;
+            const container = document.getElementById('appContainer');
+            if (currentTheme === 'dark') {
+                body.classList.add('light-theme');
+                container.classList.add('light-theme');
+                currentTheme = 'light';
+            } else {
+                body.classList.remove('light-theme');
+                container.classList.remove('light-theme');
+                currentTheme = 'dark';
+            }
+        };
+
+        // Play Song
+        window.playSong = function(previewUrl, trackName, artistName) {
+            const player = document.getElementById('audioPlayer');
+            const audio = document.getElementById('audioControl');
+            const source = document.getElementById('audioSource');
+            const songInfo = document.getElementById('currentSong');
+            const t = translations[currentLang];
+
+            source.src = previewUrl;
+            songInfo.textContent = `${t.nowPlaying} ${trackName} - ${artistName}`;
+            audio.load();
+            audio.play();
+            player.classList.add('active');
+        };
+
+        // Search Music
+        window.searchMusic = async () => {
+            const query = document.getElementById('search').value;
+            const list = document.getElementById('results');
+            const t = translations[currentLang];
+
+            if (!query) return alert(t.emptySearch);
+
+            list.innerHTML = t.searching;
+
+            try {
+                const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=10`);
+                const data = await res.json();
+
+                list.innerHTML = "";
+                if (data.results && data.results.length > 0) {
+                    data.results.forEach(song => {
+                        const div = document.createElement('div');
+                        div.className = "song-card";
+                        div.innerHTML = `
+                                <div style="display:flex; align-items:center;">
+                                    <img src="${song.artworkUrl60}">
+                                    <div><strong>${song.trackName}</strong><br><small>${song.artistName}</small></div>
+                                </div>
+                                <div class="btn-group">
+                                    <button class="action-btn play-btn" onclick="playSong('${song.previewUrl}', '${song.trackName.replace(/'/g, "")}', '${song.artistName}')">▶️ ${translations[currentLang].play}</button>
+                                    <a href="${song.previewUrl}" download="${song.trackName}.mp3" class="action-btn download-btn">⬇️</a>
+                                    <button class="action-btn save-btn" onclick="saveSong('${song.trackName.replace(/'/g, "")}', '${song.artistName}', '${song.previewUrl}')">❤️</button>
+                                </div>
+                            `;
+                        list.appendChild(div);
+                    });
+                } else {
+                    list.innerHTML = t.noResults;
+                }
+            } catch (error) {
+                list.innerHTML = t.networkError;
+            }
+        };
+
+        // Save Song
+        window.saveSong = async (title, artist, previewUrl) => {
+            const t = translations[currentLang];
+            try {
+                await addDoc(collection(db, "favorites"), { title, artist, previewUrl, savedAt: new Date() });
+                alert(title + " " + t.saveSuccess);
+            } catch (e) {
+                alert("Error: " + e.message);
+            }
+        };
+
+        // Show Favorites
+        window.showFavorites = async function() {
+            const section = document.getElementById('favoritesSection');
+            const list = document.getElementById('favoritesList');
+            const t = translations[currentLang];
+
+            section.classList.remove('hidden');
+            list.innerHTML = 'Loading...';
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "favorites"));
+                list.innerHTML = '';
+
+                if (querySnapshot.empty) {
+                    list.innerHTML = `<p>${t.noFavorites}</p>`;
+                    return;
+                }
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const div = document.createElement('div');
+                    div.className = 'favorites-card';
+                    div.innerHTML = `
+                            <div class="song-info">
+                                <strong>${data.title}</strong><br>
+                                <small>${data.artist}</small>
+                            </div>
+                            <div class="btn-group">
+                                <button class="action-btn play-btn" onclick="playSong('${data.previewUrl}', '${data.title}', '${data.artist}')">▶️</button>
+                                <button class="action-btn delete-btn" onclick="deleteFavorite('${doc.id}')">🗑️</button>
+                            </div>
+                        `;
+                    list.appendChild(div);
+                });
+            } catch (error) {
+                list.innerHTML = 'Error loading favorites';
+            }
+        };
+
+        // Delete Favorite
+        window.deleteFavorite = async function(id) {
+            if (confirm('Delete this song from favorites?')) {
+                try {
+                    await deleteDoc(doc(db, "favorites", id));
+                    showFavorites();
+                } catch (error) {
+                    alert('Error deleting: ' + error.message);
+                }
+            }
+        };
+
+        window.closeFavorites = function() {
+            document.getElementById('favoritesSection').classList.add('hidden');
+        };
+
+        // ===== CHATBOT FUNCTIONS =====
+        window.sendChatMessage = async function() {
+            const input = document.getElementById('chatInput');
+            const messages = document.getElementById('chatMessages');
+            const sendBtn = document.getElementById('chatSendBtn');
+            const msg = input.value.trim();
+            const t = translations[currentLang];
+
+            if (!msg || isChatting) return;
+
+            isChatting = true;
+            sendBtn.disabled = true;
+
+            messages.innerHTML += `<p class="user-msg">🧑 ${msg}</p>`;
+            input.value = '';
+            messages.scrollTop = messages.scrollHeight;
+
+            const typingDiv = document.createElement('p');
+            typingDiv.className = 'typing';
+            typingDiv.textContent = t.chatTyping;
+            messages.appendChild(typingDiv);
+            messages.scrollTop = messages.scrollHeight;
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg, language: currentLang })
+                });
+
+                const data = await response.json();
+
+                messages.removeChild(typingDiv);
+
+                if (data.reply) {
+                    messages.innerHTML += `<p class="bot-msg">🤖 ${data.reply}</p>`;
+                } else {
+                    messages.innerHTML += `<p class="error-msg">${t.chatError}</p>`;
+                }
+                messages.scrollTop = messages.scrollHeight;
+            } catch (error) {
+                if (messages.contains(typingDiv)) {
+                    messages.removeChild(typingDiv);
+                }
+                messages.innerHTML += `<p class="error-msg">${t.chatNetworkError}</p>`;
+                messages.scrollTop = messages.scrollHeight;
+            }
+
+            isChatting = false;
+            sendBtn.disabled = false;
+            input.focus();
+        };
+
+        // Tuma kwa Enter
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('chatInput');
+            if (input) {
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') sendChatMessage();
+                });
+            }
+        });
+
+        // ===== COPY FUNCTION =====
+        window.copyCode = function() {
+            const html = document.documentElement.outerHTML;
+            navigator.clipboard.writeText(html).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = '✅ Copied!';
+                btn.classList.add('copy-success');
+                setTimeout(() => {
+                    btn.textContent = '📋 Copy Code';
+                    btn.classList.remove('copy-success');
+                }, 3000);
+            }).catch(() => {
+                alert('Tafadhali copy manually: Ctrl+A then Ctrl+C');
+            });
+        };
+
+        // Initialize
+        updateLanguage('sw');
+    </script>
+
+</body>
+  </html>
